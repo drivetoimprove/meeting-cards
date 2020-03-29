@@ -34,3 +34,16 @@ jobs:
             --deployment-group-name production
             --file-exists-behavior OVERWRITE
             --s3-location bucket=deployments-dti-cards-dti-cat,key=production-cards.zip,bundleType=zip
+  slackNotification:
+    name: Slack Notification for deployments
+    needs: production-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2.0.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_ICON: https://www.drivetoimprove.com/bundles/app/img/logo_drive_to_improve.png
+          SLACK_TITLE: Some changes have been deployed to https://cards.dti.cat
+          SLACK_USERNAME: alfred_from_dti
