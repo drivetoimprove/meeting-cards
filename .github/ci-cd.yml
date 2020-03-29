@@ -1,0 +1,33 @@
+production-deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+        -   uses: actions/checkout@v2
+        -   name: AWS Deploy push
+                uses: ItsKarma/aws-cli@v1.70.0
+                env:
+                    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                    AWS_DEFAULT_REGION: "eu-west-1"
+                with:
+                args: >-
+                    deploy push
+                    --application-name cards.dti.cat
+                    --description "This is a revision for the DTI Cards for meetings"
+                    --ignore-hidden-files
+                    --s3-location s3://deployments-dti-cards-dti-cat/production-cards.zip
+                    --source .
+        -   name: AWS Create Deploy
+                uses: ItsKarma/aws-cli@v1.70.0
+                env:
+                    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                    AWS_DEFAULT_REGION: "eu-west-1"
+                with:
+                args: >-
+                    deploy create-deployment
+                    --application-name cards.dti.cat
+                    --deployment-config-name CodeDeployDefault.OneAtATime
+                    --deployment-group-name production
+                    --file-exists-behavior OVERWRITE
+                    --s3-location bucket=deployments-dti-cards-dti-cat,key=production-cards.zip,bundleType=zip
