@@ -1,0 +1,18 @@
+{
+  "name": "dticards",
+  "version": "0.0.1",
+  "dependencies": {},
+  "devDependencies": {
+    "del": "^5.1.0",
+    "gulp": "^4.0.2",
+    "gulp-coffee": "latest",
+    "gulp-concat": "latest",
+    "gulp-connect": "latest",
+    "gulp-sass": "latest",
+    "gulp-uglify": "latest",
+    "gulp-util": "latest"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  }
+}

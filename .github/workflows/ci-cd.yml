@@ -1,49 +1,53 @@
 name: CI/CD
 on: push
 jobs:
-  production-deploy:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    steps:
-      - uses: actions/checkout@v2
-      - name: AWS Deploy push
-        uses: ItsKarma/aws-cli@v1.70.0
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: "eu-west-1"
-        with:
-          args: >-
-            deploy push
-            --application-name cards.dti.cat
-            --description "This is a revision for the DTI Cards for meetings"
-            --ignore-hidden-files
-            --s3-location s3://deployments-dti-cards-dti-cat/production-cards.zip
-            --source .
-      - name: AWS Create Deploy
-        uses: ItsKarma/aws-cli@v1.70.0
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: "eu-west-1"
-        with:
-          args: >-
-            deploy create-deployment
-            --application-name cards.dti.cat
-            --deployment-config-name CodeDeployDefault.OneAtATime
-            --deployment-group-name production
-            --file-exists-behavior OVERWRITE
-            --s3-location bucket=deployments-dti-cards-dti-cat,key=production-cards.zip,bundleType=zip
-  slackNotification:
-    name: Slack Notification for deployments
-    needs: production-deploy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2.0.0
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_ICON: https://www.drivetoimprove.com/bundles/app/img/logo_drive_to_improve.png
-          SLACK_TITLE: Some changes have been deployed to https://cards.dti.cat
-          SLACK_USERNAME: alfred_from_dti
+    production-deploy:
+        runs-on: ubuntu-latest
+        if: github.ref == 'refs/heads/master'
+        steps:
+            -   uses: actions/checkout@v2
+            -   name: Install npm dependencies and compile with Gulp. Put codedeploy stuff in dist folder as well.
+                uses: elstudio/actions-js-build/build@v2
+            -   name: Prepare package for CodeDeploy (create folder)
+                run: sudo mkdir distaws
+            -   name: Prepare package for CodeDeploy (put contents there)
+                run: sudo cp -a ./build-scripts appspec.yml ./dist ./distaws
+            -   name: AWS Deploy push
+                uses: ItsKarma/aws-cli@v1.70.0
+                env:
+                    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                    AWS_DEFAULT_REGION: "eu-west-1"
+                with:
+                    args: >-
+                        deploy push
+                        --application-name cards.dti.cat
+                        --description "This is a revision for DTI Cards"
+                        --s3-location s3://deployments-dti-cards-dti-cat/dist.zip
+                        --source ./distaws
+            -   name: AWS Create Deploy
+                uses: ItsKarma/aws-cli@v1.70.0
+                env:
+                    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                    AWS_DEFAULT_REGION: "eu-west-1"
+                with:
+                    args: >-
+                        deploy create-deployment
+                        --application-name cards.dti.cat
+                        --deployment-config-name CodeDeployDefault.OneAtATime
+                        --deployment-group-name production
+                        --file-exists-behavior OVERWRITE
+                        --s3-location bucket=deployments-dti-cards-dti-cat,key=dist.zip,bundleType=zip
+    slackNotification:
+        name: Slack Notification for deployments
+        needs: production-deploy
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Slack Notification
+                uses: rtCamp/action-slack-notify@v2.0.0
+                env:
+                    SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+                    SLACK_ICON: https://www.drivetoimprove.com/bundles/app/img/logo_drive_to_improve.png
+                    SLACK_TITLE: Cards.dti.cat deployed
+                    SLACK_USERNAME: alfred_from_dti
