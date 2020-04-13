@@ -48,6 +48,5 @@ jobs:
                 uses: rtCamp/action-slack-notify@v2.0.0
                 env:
                     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-                    SLACK_ICON: https://www.drivetoimprove.com/bundles/app/img/logo_drive_to_improve.png
                     SLACK_TITLE: Cards.dti.cat deployed
                     SLACK_USERNAME: alfred_from_dti
