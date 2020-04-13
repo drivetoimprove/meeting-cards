@@ -1,7 +1,7 @@
 version: 0.0
 os: linux
 files:
-    -   source: /
+    -   source: /dist
         destination: /var/www/cards.dti.cat
 permissions:
     -   object: /var/www/cards.dti.cat
